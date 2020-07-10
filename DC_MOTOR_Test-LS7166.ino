@@ -1,5 +1,5 @@
 // https://github.com/cacycleworks/Arduino_LS7166/blob/master/ArduinoDRO.ino
-// Quadrature counter decoder LS7166 control lines
+
 byte ic_nRD = 27; //PG1
 byte ic_CnD = 43; //PA1
 byte ic_nWR = 26; //PG0
@@ -15,7 +15,7 @@ byte ic_nCS = 44; //PA0
 
 const int ad[8]={28,29,30,31,32,33,34,35};
 
-unsigned long EncoderCount; // this is current encode position read from LS7166
+unsigned long EncoderCount;
 
 void setup() {
   pinMode(ic_nRD, OUTPUT);
@@ -60,8 +60,7 @@ void rd(boolean nRD) {
 }
 
 void ctrl_7166( byte control ){ 
-  DDRC = 0xff; // sets Arduino Digital pins 0-7 all as outputs
-  //PORTC = control;
+  DDRC = 0xff;
   for(int i=0;i<8;i++){
     digitalWrite(ad[i],bitRead(control,i));
     }
@@ -76,7 +75,7 @@ void latchWR_7166(){
 }
 
 void write_7166(unsigned long Data ){
-  DDRC = 0xff; // sets Arduino Digital pins 0-7 all as outputs
+  DDRC = 0xff; 
   PORTC =  (unsigned char)Data;
     latchWR_7166();
     
@@ -96,7 +95,7 @@ void init_7166() {
   delayMicroseconds(50);
 
   cs(0);cd(1);rd(1);  
-  ctrl_7166(0x20);    //Performs master reset  
+  ctrl_7166(0x20);    //MCR 리셋
   delayMicroseconds(50);
 
   cs(0);cd(1);rd(1);
@@ -120,7 +119,7 @@ void init_7166() {
 }
 
 byte latchRD_7166(){
-  byte dataread=0;  // nRD should already be high 읽기 중단이 유지 되어야 함
+  byte dataread=0;  
   DDRC = 0x00;
   rd(0); delayMicroseconds(50);
   for(int i=0;i<8;i++){digitalWrite(ad[i],1);}
@@ -132,29 +131,28 @@ byte latchRD_7166(){
 
 unsigned long read_7166(){
   unsigned long tmp=0, Data=0;
-  DDRC = 0xff; // sets Arduino Digital pins 0-7 all as outputs
+  DDRC = 0xff; 
   cd(1);rd(1);cs(0);
   ctrl_7166(0x03);
   delayMicroseconds(50);
     
-  // read 1st byte, LSB
+  
   cd(0);wr(1);cs(0);
-  tmp = latchRD_7166(); // byte 0, lsB
-  Data |= tmp;     //  << 8 추가  // read 2nd byte, the middle byte
+  tmp = latchRD_7166(); 
+  Data |= tmp;  
   cd(0);wr(1);cs(0);
-  tmp = latchRD_7166(); // byte 1  
-  tmp = tmp << 8; // shift over 8 bits
-  Data |= tmp;  // read 3rd byte, the MSB
+  tmp = latchRD_7166(); 
+  tmp = tmp << 8; 
+  Data |= tmp;  
   cd(0);wr(1);cs(0);
-  tmp = latchRD_7166(); // byte 1
-  tmp = tmp << 16;     // shift over 16 bits this tmp is MSB
+  tmp = latchRD_7166(); 
+  tmp = tmp << 16;    
   Data |= tmp;
   cs(1);
   return Data;
 }
-/////////////////////////////////////////////////////////////////////////
-void loop() {
 
+void loop() {
   wr(1); cs(1); cd(1); rd(1);
   int vol = analogRead(val);
   int pwm = map(vol, 0, 1023, 0, 255);
@@ -164,11 +162,4 @@ void loop() {
   Serial.print("Encoder Count = ");
   Serial.println(EncoderCount, DEC);
   delay(500);
-}
-
-void delay_t(int t) {
-  int i;
-  for(i=0; i<t; i++){ 
-  asm("nop");
-  }
 }
